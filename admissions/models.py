@@ -15,3 +15,6 @@ class Image(models.Model):
     name = models.CharField(max_length=100)
     image_file = models.ImageField(upload_to='images/')
     date_created = models.DateTimeField(auto_now_add=True)
+
+
+

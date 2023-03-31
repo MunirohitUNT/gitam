@@ -7,11 +7,11 @@ from django.contrib.auth.decorators import login_required, permission_required
 from .forms import ImageForm
 from django.contrib.auth.hashers import make_password
 
+
 hashed_password = make_password('password123')
 
 
 # Create your views here.
-@login_required
 def homepage(request):
     return render(request, 'index.html')
 
@@ -92,3 +92,14 @@ def upload_image(request):
     else:
         form = ImageForm()
     return render(request, 'upload_image.html', {'form': form})
+
+
+def calculate_bmi(request):
+    if request.method == 'POST':
+        height = float(request.POST['height'])
+        weight = float(request.POST['weight'])
+        bmi = weight / (height * height)
+        return render(request, 'bmi_result.html', {'bmi': bmi})
+    else:
+        return render(request, 'bmi_form.html')
+
