@@ -6,7 +6,14 @@ from admissions.forms import VendorForm
 from django.contrib.auth.decorators import login_required, permission_required
 from .forms import ImageForm
 from django.contrib.auth.hashers import make_password
-
+from .models import BmiRecord
+from django.shortcuts import render
+from django.http import HttpResponse
+from .models import Barcode
+from .forms import BarcodeForm
+import io
+from barcode import EAN13
+from barcode.writer import ImageWriter
 
 hashed_password = make_password('password123')
 
@@ -99,7 +106,38 @@ def calculate_bmi(request):
         height = float(request.POST['height'])
         weight = float(request.POST['weight'])
         bmi = weight / (height * height)
+        record = BmiRecord.objects.create(height=height, weight=weight, bmi=bmi)
+        record.save()
         return render(request, 'bmi_result.html', {'bmi': bmi})
     else:
         return render(request, 'bmi_form.html')
 
+
+def generate_barcode(barcode_number):
+    # Generate the barcode image in-memory
+    barcode = EAN13(barcode_number, writer=ImageWriter())
+    buffer = io.BytesIO()
+    barcode.write(buffer)
+    return buffer.getvalue()
+
+
+def create_barcode(request):
+    if request.method == 'POST':
+        form = BarcodeForm(request.POST)
+        if form.is_valid():
+            barcode = form.save(commit=False)
+            # Generate the barcode image and save it to the database
+            barcode_number = form.cleaned_data['name']
+            barcode_image = generate_barcode(barcode_number)
+            barcode.barcode_image = barcode_image
+            barcode.save()
+            return HttpResponse('Barcode created!')
+    else:
+        form = BarcodeForm()
+    return render(request, 'create_barcode.html', {'form': form})
+
+
+def read_barcode(request, barcode_id):
+    barcode = Barcode.objects.get(pk=barcode_id)
+    # Read the barcode image from the database and serve it as a response
+    return HttpResponse(barcode.barcode_image, content_type='image/png')

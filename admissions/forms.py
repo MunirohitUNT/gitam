@@ -1,6 +1,7 @@
 from django import forms
 from admissions.models import Student
 from .models import Image
+from admissions.models import Barcode
 
 
 class StudentModelForm(forms.ModelForm):
@@ -23,4 +24,7 @@ class ImageForm(forms.ModelForm):
         fields = ('name', 'image_file',)
 
 
-
+class BarcodeForm(forms.ModelForm):
+    class Meta:
+        model = Barcode
+        fields = ('name',)

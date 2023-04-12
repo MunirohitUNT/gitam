@@ -17,5 +17,7 @@ urlpatterns = [
     path('update/<int:id>/', updateStudent),
     path('bmi/', calculate_bmi, name='calculate_bmi'),
     path('upload-image/', upload_image, name='upload_image'),  # date and image
+    path('create/', views.create_barcode, name='create-barcode'),
+    path('<int:barcode_id>/', views.read_barcode, name='read-barcode'),
 
 ]
