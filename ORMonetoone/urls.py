@@ -21,6 +21,8 @@ from django.contrib.auth.views import LoginView
 from cellphone.views import upload_image, upload_success
 from cellphone.views import currency_to_words
 
+from cellphone.views import CellphoneCreateView
+from cellphone.views import timezone_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -33,4 +35,11 @@ urlpatterns = [
     path('currency-to-words/', currency_to_words, name='currency_to_words'),
     # path('login/', LoginView.as_view(), name='login'),
     path('', views.home, name='home'),
+    path('create/', CellphoneCreateView.as_view(), name='cellphone_create'),
+    path('create_product/', views.create_product, name='create_product'),
+    path('products', views.product_list, name='product_list'),
+    path('uploaded/', views.upload_file, name='upload_file'),
+    path('files/', views.file_list, name='file_list'),
+    path('timezone/', timezone_view, name='timezone_view'),
+
 ]

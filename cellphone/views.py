@@ -8,6 +8,21 @@ from cellphone.forms import ImageForm
 import qrcode
 import io
 from num2words import num2words
+from django.views.generic.edit import CreateView
+from django.urls import reverse_lazy
+
+from cellphone.models import Cellphone
+from .forms import CellphoneForm
+from django.views.generic import ListView, DetailView
+from .models import Product
+from .forms import ProductForm
+from .models import MyFile
+from django.core.files.base import ContentFile
+from .forms import FileUploadForm
+from django.http import HttpResponseRedirect
+import pytz
+from django.shortcuts import render
+from .forms import CountryForm
 
 
 # Create your views here.
@@ -28,7 +43,7 @@ def register(request):
             return redirect('login')
     else:
         form = UserRegisterForm()
-        print(form)
+    # print(form)
     return render(request, 'register.html', {'form': form})
 
 
@@ -98,3 +113,82 @@ def currency_to_words(request):
         return render(request, 'currency_to_words.html', {'amount': amount, 'amount_words': amount_words})
     else:
         return render(request, 'currency_to_words.html')
+
+
+class CellphoneCreateView(CreateView):
+    model = Cellphone
+    form_class = CellphoneForm
+    success_url = reverse_lazy('cellphone_list')
+    template_name = 'dobcellphone_form.html'
+
+    def form_valid(self, form):
+        self.object = form.save()
+        context = self.get_context_data(object=self.object)
+        context['age'] = self.object.age()
+        return self.render_to_response(context)
+
+
+def create_product(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('product_list')
+    else:
+        form = ProductForm()
+    return render(request, 'create_product.html', {'form': form})
+
+
+def product_list(request):
+    products = Product.objects.all()
+    return render(request, 'product_list.html', {'products': products})
+
+
+'''
+def upload_file(request):
+    if request.method == 'POST':
+        form = FileUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = form.cleaned_data['file']
+            file_obj = File(name=file.name, path=file.path, size=file.size)
+            file_obj.save()
+            return HttpResponseRedirect('/files/')
+    else:
+        form = FileUploadForm()
+    return render(request, 'uploadfile.html', {'form': form})
+'''
+
+
+def upload_file(request):
+    if request.method == 'POST':
+        uploaded_file = request.FILES['file']
+        file_contents = uploaded_file.read()
+        file_obj = MyFile(name=uploaded_file.name, size=len(file_contents))
+        file_obj.path.save(uploaded_file.name, ContentFile(file_contents))
+        file_obj.save()
+        return render(request, 'upload_successfull.html', {'file_id': str(file_obj.id)})
+    else:
+        return render(request, 'upload_form.html')
+
+
+def file_list(request):
+    files = MyFile.objects.all()
+    return render(request, 'file_list.html', {'files': files})
+
+
+def get_timezone_for_country(country):
+    timezones = pytz.country_timezones.get(country, [])
+    if timezones:
+        return pytz.timezone(timezones[0])
+
+
+def timezone_view(request):
+    if request.method == 'POST':
+        form = CountryForm(request.POST)
+        if form.is_valid():
+            country = form.cleaned_data['country']
+            timezone = get_timezone_for_country(country.code)
+            return render(request, 'timezone.html', {'timezone': timezone})
+    else:
+        form = CountryForm()
+    return render(request, 'timezone_form.html', {'form': form})
